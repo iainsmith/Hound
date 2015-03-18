@@ -119,15 +119,33 @@ var Model = {
     };
 
     if (typeof ModelData != 'undefined') {
-      var data = JSON.parse(ModelData),
-          repos = {};
-      for (var name in data) {
-        repos[name.toLowerCase()] = data[name];
+      var repoData = JSON.parse(ModelData),
+          // tagData = JSON.parse(TagData),
+          repos = {},
+          tags = {};
+      for (var name in repoData) {
+        repos[name.toLowerCase()] = repoData[name];
       }
       this.repos = repos;
+      this.tags = tags;
       next();
       return;
     }
+
+
+    $.ajax({
+      url: '/api/v1/tags',
+      dataType: 'json',
+      success: function(data) {
+        _this.tags = data;
+      },
+      error: function(xhr, status, err) {
+        // TODO(knorton): Fix these
+        console.error(err);
+        console.log("loaded tags");
+      }
+    });
+
 
     $.ajax({
       url: '/api/v1/repos',
@@ -321,7 +339,8 @@ var SearchBar = React.createClass({
   getInitialState: function() {
     return {
       state: null,
-      allRepos: []
+      allRepos: [],
+      allTags: []
     };
   },
   queryGotKeydown: function(event) {
@@ -417,9 +436,14 @@ var SearchBar = React.createClass({
   },
   render: function() {
     var repoCount = this.state.allRepos.length,
-        repoOptions = [];
+        repoOptions = [], tagOptions = [];
+    var tagCount = 3;//this.state.allTags.length;
     this.state.allRepos.forEach(function(repoName){
       repoOptions.push(<RepoOption value={repoName} />);
+    });
+
+    this.state.allTags.forEach(function(tagName){
+      tagOptions.push(<RepoOption value={tagName} />);
     });
 
     var stats = this.state.stats;
@@ -485,6 +509,15 @@ var SearchBar = React.createClass({
                 </select>
               </div>
             </div>
+            <div className="field">
+              <label className="label">Select Tag</label>
+              <div className="field-input">
+                <select id="tags" className="form-control multiselect" multiple={true} size={tagCount} ref="tags">
+                  {tagOptions}
+                </select>
+              </div>
+            </div>
+
           </div>
           <div className="ban" ref="ban" onClick={this.showAdvanced}>
             <em>Advanced:</em> ignore case, filter by path, stuff like that.
