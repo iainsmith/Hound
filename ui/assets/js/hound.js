@@ -120,14 +120,13 @@ var Model = {
 
     if (typeof ModelData != 'undefined') {
       var repoData = JSON.parse(ModelData),
-          // tagData = JSON.parse(TagData),
           repos = {},
-          tags = {};
+          tags = ["ios", "david"]
       for (var name in repoData) {
         repos[name.toLowerCase()] = repoData[name];
       }
       this.repos = repos;
-      this.tags = tags;
+      this.searchtag = tags;
       next();
       return;
     }
@@ -137,7 +136,7 @@ var Model = {
       url: '/api/v1/tags',
       dataType: 'json',
       success: function(data) {
-        _this.tags = data;
+        _this.searchtag = data;
       },
       error: function(xhr, status, err) {
         // TODO(knorton): Fix these
@@ -320,6 +319,11 @@ var SearchBar = React.createClass({
     Model.didLoadRepos.tap(function(model, repos) {
       _this.setState({ allRepos: Object.keys(repos) });
     });
+
+    Model.didLoadRepos.tap(function(model, repos) {
+      console.log(model)
+      _this.setState({ allTags: model.searchtag });
+    });
   },
 
   componentDidMount: function() {
@@ -437,7 +441,7 @@ var SearchBar = React.createClass({
   render: function() {
     var repoCount = this.state.allRepos.length,
         repoOptions = [], tagOptions = [];
-    var tagCount = 3;//this.state.allTags.length;
+    var tagCount = this.state.allTags.length;
     this.state.allRepos.forEach(function(repoName){
       repoOptions.push(<RepoOption value={repoName} />);
     });
@@ -512,7 +516,7 @@ var SearchBar = React.createClass({
             <div className="field">
               <label className="label">Select Tag</label>
               <div className="field-input">
-                <select id="tags" className="form-control multiselect" multiple={true} size={tagCount} ref="tags">
+                <select id="tags" className="form-control multiselect" multiple={true} size={tagCount} ref="searchtag">
                   {tagOptions}
                 </select>
               </div>
