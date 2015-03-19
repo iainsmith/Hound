@@ -50,6 +50,7 @@ func searchAll(
 	query string,
 	opts *index.SearchOptions,
 	repos []string,
+	tags []string,
 	idx map[string]*searcher.Searcher,
 	filesOpened *int,
 	duration *int) (map[string]*index.SearchResponse, error) {
@@ -61,6 +62,7 @@ func searchAll(
 	// use a buffered channel to avoid routine leaks on errs.
 	ch := make(chan *searchResponse, n)
 	for _, repo := range repos {
+		fmt.Println(repo)
 		go func(repo string) {
 			fms, err := idx[repo].Search(query, opts)
 			ch <- &searchResponse{repo, fms, err}
@@ -169,6 +171,7 @@ func Setup(m *http.ServeMux, idx map[string]*searcher.Searcher) {
 		stats := parseAsBool(r.FormValue("stats"))
 		repos := parseAsRepoList(r.FormValue("repos"), idx)
 		query := r.FormValue("q")
+		tags := strings.Split(r.FormValue("search_tags"), ",")
 		opt.Offset, opt.Limit = parseRangeValue(r.FormValue("rng"))
 		opt.FileRegexp = r.FormValue("files")
 		opt.IgnoreCase = parseAsBool(r.FormValue("i"))
@@ -181,7 +184,7 @@ func Setup(m *http.ServeMux, idx map[string]*searcher.Searcher) {
 		var filesOpened int
 		var durationMs int
 
-		results, err := searchAll(query, &opt, repos, idx, &filesOpened, &durationMs)
+		results, err := searchAll(query, &opt, repos, tags, idx, &filesOpened, &durationMs)
 		if err != nil {
 			writeError(w, err)
 			return
