@@ -78,7 +78,8 @@ var ParamsFromUrl = function(params) {
     q: '',
     i: 'nope',
     files: '',
-    repos: '*'
+    repos: '*',
+    search_tags: '*'
   };
   return ParamsFromQueryString(location.search, params);
 };
@@ -121,12 +122,21 @@ var Model = {
     if (typeof ModelData != 'undefined') {
       var repoData = JSON.parse(ModelData),
           repos = {},
-          tags = ["ios", "david"]
+          search_tags = []
+
+      all_keys = Object.keys(repoData)
+      Object.keys(repoData).forEach(function (key) {
+        search_tags = search_tags.concat(repoData[key]["tags"]);
+      });
+
       for (var name in repoData) {
         repos[name.toLowerCase()] = repoData[name];
       }
+
+      console.log(tags)
+
       this.repos = repos;
-      this.searchtag = tags;
+      this.search_tags = search_tags;
       next();
       return;
     }
@@ -136,7 +146,7 @@ var Model = {
       url: '/api/v1/tags',
       dataType: 'json',
       success: function(data) {
-        _this.searchtag = data;
+        _this.search_tags = data;
       },
       error: function(xhr, status, err) {
         // TODO(knorton): Fix these
@@ -317,12 +327,8 @@ var SearchBar = React.createClass({
   componentWillMount: function() {
     var _this = this;
     Model.didLoadRepos.tap(function(model, repos) {
-      _this.setState({ allRepos: Object.keys(repos) });
-    });
-
-    Model.didLoadRepos.tap(function(model, repos) {
-      console.log(model)
-      _this.setState({ allTags: model.searchtag });
+      _this.setState({ allRepos: Object.keys(repos),
+                       allTags: model.search_tags });
     });
   },
 
@@ -394,6 +400,7 @@ var SearchBar = React.createClass({
       q : this.refs.q.getDOMNode().value.trim(),
       files : this.refs.files.getDOMNode().value.trim(),
       repos : this.refs.repos.state.value.join(','),
+      search_tags : this.refs.search_tags.state.value.join(','),
       i: this.refs.icase.getDOMNode().checked ? 'fosho' : 'nope'
     };
   },
@@ -516,7 +523,7 @@ var SearchBar = React.createClass({
             <div className="field">
               <label className="label">Select Tag</label>
               <div className="field-input">
-                <select id="tags" className="form-control multiselect" multiple={true} size={tagCount} ref="searchtag">
+                <select id="tags" className="form-control multiselect" multiple={true} size={tagCount} ref="search_tags">
                   {tagOptions}
                 </select>
               </div>
@@ -770,7 +777,8 @@ var App = React.createClass({
       q: params.q,
       i: params.i,
       files: params.files,
-      repos: params.repos
+      repos: params.repos,
+      search_tags: params.search_tags
     });
 
     var _this = this;
@@ -816,7 +824,8 @@ var App = React.createClass({
       '?q=' + encodeURIComponent(params.q) +
       '&i=' + encodeURIComponent(params.i) +
       '&files=' + encodeURIComponent(params.files) +
-      '&repos=' + params.repos;
+      '&repos=' + params.repos +
+      '&tags=' + params.search_tags;
     history.pushState({path:path}, '', path);
   },
   render: function() {
@@ -827,6 +836,7 @@ var App = React.createClass({
             i={this.state.i}
             files={this.state.files}
             repos={this.state.repos}
+            search_tags={this.state.search_tags}
             onSearchRequested={this.onSearchRequested} />
         <ResultView ref="resultView" q={this.state.q} />
       </div>
