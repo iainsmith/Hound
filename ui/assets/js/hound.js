@@ -141,21 +141,6 @@ var Model = {
       return;
     }
 
-
-    $.ajax({
-      url: '/api/v1/tags',
-      dataType: 'json',
-      success: function(data) {
-        _this.search_tags = data;
-      },
-      error: function(xhr, status, err) {
-        // TODO(knorton): Fix these
-        console.error(err);
-        console.log("loaded tags");
-      }
-    });
-
-
     $.ajax({
       url: '/api/v1/repos',
       dataType: 'json',
