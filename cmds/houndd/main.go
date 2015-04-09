@@ -77,7 +77,7 @@ func runHttp(
 	}
 
 	m.Handle("/", h)
-	api.Setup(m, idx)
+	api.Setup(m, idx, cfg)
 	return http.ListenAndServe(addr, m)
 }
 

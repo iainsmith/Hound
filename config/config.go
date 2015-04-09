@@ -1,6 +1,7 @@
 package config
 
 import (
+	"go/format"
 	"encoding/json"
 	"errors"
 	"os"
@@ -31,6 +32,7 @@ type Repo struct {
 type Config struct {
 	DbPath string           `json:"dbpath"`
 	Repos  map[string]*Repo `json:"repos"`
+	ReposByTag map[string][*Repo]
 }
 
 // SecretMessage is just like json.RawMessage but it will not
@@ -61,8 +63,8 @@ func (r *Repo) VcsConfig() []byte {
 	return *r.VcsConfigMessage
 }
 
-// Populate missing config values with default values.
-func initRepo(r *Repo) {
+// Populate missing config values with default values and set tags on config.
+func initRepo(r *Repo, c *Config) {
 	if r.MsBetweenPolls == 0 {
 		r.MsBetweenPolls = defaultMsBetweenPoll
 	}
@@ -84,6 +86,12 @@ func initRepo(r *Repo) {
 		if r.UrlPattern.Anchor == "" {
 			r.UrlPattern.Anchor = defaultAnchor
 		}
+	}
+
+	for _, t := range r.Tags {
+		repos := c.Tags[t]
+		repos.append(r)
+		c.Tags[t] = repos
 	}
 }
 

@@ -154,7 +154,7 @@ func parseRangeValue(rv string) (int, int) {
 	return b, e
 }
 
-func Setup(m *http.ServeMux, idx map[string]*searcher.Searcher) {
+func Setup(m *http.ServeMux, idx map[string]*searcher.Searcher, cfg *config.Config) {
 
 	m.HandleFunc("/api/v1/repos", func(w http.ResponseWriter, r *http.Request) {
 		res := map[string]*config.Repo{}
@@ -172,6 +172,9 @@ func Setup(m *http.ServeMux, idx map[string]*searcher.Searcher) {
 		repos := parseAsRepoList(r.FormValue("repos"), idx)
 		query := r.FormValue("q")
 		tags := strings.Split(r.FormValue("search_tags"), ",")
+
+		// If we have tags then restrict repos
+
 		opt.Offset, opt.Limit = parseRangeValue(r.FormValue("rng"))
 		opt.FileRegexp = r.FormValue("files")
 		opt.IgnoreCase = parseAsBool(r.FormValue("i"))
